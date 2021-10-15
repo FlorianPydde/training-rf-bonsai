@@ -4,7 +4,6 @@ using Goal
 using Math
 
 const MaxDeviation = 2
-const MaxIterations = 288
 
 type ObservableState {
     Tset: Number.Float32,
@@ -14,7 +13,7 @@ type ObservableState {
 }
 
 type SimAction {
-    hvacON: Number.Int8 <off=0, on=1,>
+    hvacON: Number.Int8 <off=0, on=1>
 }
 
 type SimConfig {
@@ -22,11 +21,17 @@ type SimConfig {
     C: Number.Float32, # Thermal Capacity
     Qhvac: Number.Float32, # Heat Flux
     Tin_initial: number, # C
-    schedule_index: Number.Int8, # 1 - fixed, 2 - randomized
+    schedule_index: Number.Int8, # 0 - fixed 1 - realistic (sinusoidal), 2 - realistic + noise
     number_of_days: number,
     timestep: number, # Min
     max_iterations: number, # Alters schedule generation
-    total_power: Number.Float32 # total power consumption
+    total_power: number, # total power consumption
+    day_start: number,
+    day_end: number,
+    t_set_day: number,
+    t_set_night: number,
+    t_mid_point: number,
+    t_amplitude: number,
 }
 
 function TempDiff(Tin:number, Tset:number) {
@@ -49,7 +54,7 @@ graph (input: ObservableState): SimAction {
             }
 
             training {
-                EpisodeIterationLimit: MaxIterations
+                EpisodeIterationLimit: 100
             }
 
             lesson `Lesson 1` {
@@ -58,10 +63,14 @@ graph (input: ObservableState): SimAction {
                     C: 0.3,
                     Qhvac: 9,
                     Tin_initial: number<18 .. 30>,
-                    schedule_index: 2,
-                    number_of_days: 1,
                     timestep: 5,
-                    max_iterations: MaxIterations
+                    schedule_index: 1,
+                    day_start: 7,
+                    day_end: 22,
+                    t_set_day: 23,
+                    t_set_night: 18,
+                    t_mid_point: 25,
+                    t_amplitude: 5,
                 }
             }
         }

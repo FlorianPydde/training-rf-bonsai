@@ -56,8 +56,14 @@ class TemplateSimulatorSession:
             "schedule_index": 3,
             "number_of_days": 1,
             "timestep": 5,
-            "max_iterations": int(1 * 24 * 60 / 5),
-            "total_power": 0
+            "total_power": 0,
+            "day_start": 7,
+            "day_end": 22,
+            "t_set_day": 23,
+            "t_set_night": 18,
+            "t_mid_point": 25,
+            "t_amplitude": 5
+            
         }
         self._reset()
         self.terminal = False
@@ -81,9 +87,9 @@ class TemplateSimulatorSession:
 
         sim_state = {
             "Tset": float(self.simulator.Tset),
-            "Tset1": float(self.simulator.Tset1),  # forecast at +1 iteration
-            "Tset2": float(self.simulator.Tset2),  # forecast at +2 iterations
-            "Tset3": float(self.simulator.Tset3),  # forecast at +3 iterations
+            # "Tset1": float(self.simulator.Tset1),  # forecast at +1 iteration
+            # "Tset2": float(self.simulator.Tset2),  # forecast at +2 iterations
+            # "Tset3": float(self.simulator.Tset3),  # forecast at +3 iterations
             "Tin": float(self.simulator.Tin),
             "Tout": float(self.simulator.Tout),
             "power": float(self.simulator.get_Power()),
@@ -113,10 +119,14 @@ class TemplateSimulatorSession:
             Tin_initial=self.sim_config["Tin_initial"],
         )
         self.simulator.setup_schedule(
-            days=self.sim_config["number_of_days"],
             timestep=self.sim_config["timestep"],
             schedule_index=self.sim_config["schedule_index"],
-            max_iterations=288,
+            day_start = self.sim_config["day_start"],
+            day_end = self.sim_config["day_end"],
+            t_set_day = self.sim_config["t_set_day"],
+            t_set_night = self.sim_config["t_set_night"],
+            t_mid_point = self.sim_config["t_mid_point"],
+            t_amplitude = self.sim_config["t_amplitude"]
         )
 
     def episode_start(self, config: Dict[str, Any] = None):
@@ -226,7 +236,7 @@ def test_random_policy(
     num_episodes: int = 10,
     render: bool = False,
     log_iterations: bool = False,
-    max_iterations: int = 288,
+    max_iterations: int = 10000,
 ):
     """Test a policy using random actions over a fixed number of episodes
 
@@ -245,11 +255,14 @@ def test_random_policy(
             "C": 0.3,
             "Qhvac": 9,
             "Tin_initial": random.randint(18, 30),
-            "schedule_index": 3,
-            "number_of_days": 1,
             "timestep": 5,
-            "max_iterations": int(1 * 24 * 60 / 5),
-            "total_power": 0
+            "schedule_index": 1,
+            "day_start": 7,
+            "day_end": 22,
+            "t_set_day": 23,
+            "t_set_night": 18,
+            "t_mid_point": 25,
+            "t_amplitude": 5
         }
         sim.episode_start(config=config)
         sim_state = sim.get_state()
@@ -394,7 +407,7 @@ if __name__ == "__main__":
 
     if args.test_local:
         test_random_policy(
-            render=args.render, num_episodes=500, log_iterations=args.log_iterations
+            render=args.render, num_episodes=100, log_iterations=args.log_iterations
         )
     else:
         main(config_setup=args.config_setup, render=args.render)
