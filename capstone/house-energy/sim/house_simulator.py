@@ -23,7 +23,7 @@ class House():
         plt.close()
         self.fig, self.ax = plt.subplots(1, 1)
 
-    def setup_schedule(self, max_iterations: int = 288, timestep: int = 5, schedule_index: int = 0, starting_hour=0, tset_day_start: int = 7, tset_day_end: int = 22, t_set_day=23, t_set_night=18, t_mid_point=25, t_amplitude=5):
+    def setup_schedule(self, custom_t_out = [], max_iterations: int = 288, timestep: int = 5, schedule_index: int = 0, starting_hour=0, tset_day_start: int = 7, tset_day_end: int = 22, t_set_day:int =23, t_set_night:int =18, t_mid_point:int =25, t_amplitude: int =5):
         """ define the Tset_schedule, Tout_schedule, the length of schedule, timestep
         """
         self.timestep = max(
@@ -40,10 +40,11 @@ class House():
         self.Tset_schedule[b:] = t_set_night
         self.Tset_schedule[a:b] = t_set_day
 
-        # constant outside weather
+        if len(custom_t_out) > 0:
+           self.Tout_schedule = list(custom_t_out)
 
         # generate sinus weather
-        if schedule_index == 1:
+        elif schedule_index == 1:
             self.Tout_schedule = self.generate_Tout(
                 t_mid_point=t_mid_point, t_amplitude=t_amplitude, timestep=timestep)
 
@@ -55,31 +56,8 @@ class House():
             self.Tout_schedule = self.Tout_schedule + \
                 np.random.normal(0, 0.25, size=len(self.Tout_schedule))
         else:
+                # constant outside weather
             self.Tout_schedule = np.full(self.max_iterations, 32)
-
-        # # randomize
-        # if schedule_index == 2:
-        #     self.Tset_schedule = np.full(self.max_iterations, 25)
-        #     self.Tout_schedule = np.full(self.max_iterations, 32)
-        #     self.occupancy_schedule = np.full(self.max_iterations, 1)
-        #     for d in range(days):
-        #         # We assume people leave home between 9:00 and return at 17:00
-        #         a = time_to_index(d, 9)
-        #         b = time_to_index(d, 16)
-        #         self.Tset_schedule[a:b]= np.random.randint(low=18, high=21)
-        #         c = time_to_index(d, 8)
-        #         d = time_to_index(d, 17)
-        #         self.Tset_schedule[:c] = np.random.randint(low=17, high=20)
-        #         self.Tset_schedule[d:-1] = np.random.randint(low=17, high=20)
-        #         self.Tout_schedule[:c] = np.random.randint(low=22, high=26)
-        #         self.Tout_schedule[d:-1] = np.random.randint(low=28, high=35)
-
-        # simpler
-        # if schedule_index == 2:
-        #     self.Tset_schedule = np.full(self.max_iterations, 25)
-        #     self.Tset_schedule[96:204] = 20
-        #     self.Tout_schedule = np.full(self.max_iterations, 32)
-        #     self.occupancy_schedule = np.full(self.max_iterations, 1)
 
         self.Tset_schedule = np.roll(self.Tset_schedule, -starting_hour_index)
         self.Tout_schedule = np.roll(self.Tout_schedule, -starting_hour_index)
@@ -87,9 +65,11 @@ class House():
         self.Tset = self.Tset_schedule[0]  # Set Temperature
         self.Tout = self.Tout_schedule[0]  # Outside temperature
 
-        # self.Tset1 = self.Tset_schedule[1]  # Set Temperature i+1
-        # self.Tset2 = self.Tset_schedule[2]  # Set Temperature i+2
-        # self.Tset3 = self.Tset_schedule[3]  # Set Temperature i+3
+        self.Tset1 = self.Tset_schedule[1]  + np.random.normal(0, 1 )# Set Temperature i+1 and noise
+        self.Tset2 = self.Tset_schedule[2]  + np.random.normal(0, 1) # Set Temperature i+2
+        self.Tset3 = self.Tset_schedule[3]  + np.random.normal(0, 1) # Set Temperature i+3
+        self.Tset4 = self.Tset_schedule[4]  + np.random.normal(0, 1)
+        self.Tset5 = self.Tset_schedule[5]  + np.random.normal(0, 1)
 
         # For plotting only
         self.time_to_plot = [0]
@@ -174,11 +154,13 @@ class House():
         return self
 
     def __next__(self):
-        if self.iteration < self.max_iterations:  # - 5
+        if self.iteration < self.max_iterations: 
             self.update_Tset(self.Tset_schedule[self.iteration])
-            # self.Tset1 = self.Tset_schedule[self.iteration+1]
-            # self.Tset2 = self.Tset_schedule[self.iteration+2]
-            # self.Tset3 = self.Tset_schedule[self.iteration+3]
+            self.Tset1 = self.Tset_schedule[int((self.iteration+1)%self.max_iterations)]
+            self.Tset2 = self.Tset_schedule[int((self.iteration+2)%self.max_iterations)]
+            self.Tset3 = self.Tset_schedule[int((self.iteration+3)%self.max_iterations)]
+            self.Tset4 = self.Tset_schedule[int((self.iteration+4)%self.max_iterations)]
+            self.Tset5 = self.Tset_schedule[int((self.iteration+5)%self.max_iterations)]
             self.update_Tout(self.Tout_schedule[self.iteration])
             self.update_occupancy(self.occupancy_schedule[self.iteration])
             self.update_time()

@@ -53,8 +53,9 @@ class TemplateSimulatorSession:
             "C": 0.3,
             "Qhvac": 9,
             "Tin_initial": 30,
+            "custom_t_out": [],
             "schedule_index": 3,
-            "max_iterations": 288,
+            "max_iterations": 24 * 60 // 5,
             "timestep": 5,
             "total_power": 0,
             "starting_hour": 0,
@@ -88,9 +89,11 @@ class TemplateSimulatorSession:
 
         sim_state = {
             "Tset": float(self.simulator.Tset),
-            # "Tset1": float(self.simulator.Tset1),  # forecast at +1 iteration
-            # "Tset2": float(self.simulator.Tset2),  # forecast at +2 iterations
-            # "Tset3": float(self.simulator.Tset3),  # forecast at +3 iterations
+            "Tset1": float(self.simulator.Tset1),  # forecast at +1 iteration
+            "Tset2": float(self.simulator.Tset2),  # forecast at +2 iterations
+            "Tset3": float(self.simulator.Tset3),  # forecast at +3 iterations
+            "Tset4": float(self.simulator.Tset4),  # forecast at +3 iterations
+            "Tset5": float(self.simulator.Tset5),  # forecast at +3 iterations
             "Tin": float(self.simulator.Tin),
             "Tout": float(self.simulator.Tout),
             "power": float(self.simulator.get_Power()),
@@ -121,6 +124,7 @@ class TemplateSimulatorSession:
         )
         self.simulator.setup_schedule(
             max_iterations=self.sim_config['max_iterations'],
+            custom_t_out = self.sim_config['custom_t_out'],
             timestep=self.sim_config["timestep"],
             schedule_index=self.sim_config["schedule_index"],
             starting_hour = self.sim_config["starting_hour"],
@@ -239,7 +243,7 @@ def test_random_policy(
     num_episodes: int = 10,
     render: bool = False,
     log_iterations: bool = False,
-    max_iterations: int = 10000,
+    max_iterations: int = 24 * 60 // 5,
 ):
     """Test a policy using random actions over a fixed number of episodes
 
@@ -258,7 +262,8 @@ def test_random_policy(
             "C": 0.3,
             "Qhvac": 9,
             "Tin_initial": random.randint(18, 30),
-            "max_iterations": int(24 * 60 / 5),
+            "custom_t_out": [],
+            "max_iterations": max_iterations,
             "timestep": 5,
             "schedule_index": 1,
             "starting_hour": 0,
