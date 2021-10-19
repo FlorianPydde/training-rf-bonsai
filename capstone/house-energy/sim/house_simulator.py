@@ -23,36 +23,37 @@ class House():
         plt.close()
         self.fig, self.ax = plt.subplots(1, 1)
 
-    def setup_schedule(self, timestep: int = 5, schedule_index: int = 0, day_start: int = 7, day_end: int = 22, t_set_day=23, t_set_night=18, t_mid_point=25, t_amplitude=5):
+    def setup_schedule(self, max_iterations: int = 288, timestep: int = 5, schedule_index: int = 0, starting_hour=0, tset_day_start: int = 7, tset_day_end: int = 22, t_set_day=23, t_set_night=18, t_mid_point=25, t_amplitude=5):
         """ define the Tset_schedule, Tout_schedule, the length of schedule, timestep
         """
         self.timestep = max(
             1, timestep)  # keep in minutes here to keep number of minutes for days consistent
-
+        starting_hour_index = self.__time_to_index(starting_hour, timestep)
         # an iteration spans 1 day
-        self.max_iterations = int(24 * 60 / timestep)
+        self.max_iterations = max_iterations
         self.occupancy_schedule = np.full(self.max_iterations, 1)
 
         self.Tset_schedule = np.full(self.max_iterations, 25)
         a, b = self.__time_to_index(
-            day_start, timestep), self.__time_to_index(day_end, timestep)
+            tset_day_start, timestep), self.__time_to_index(tset_day_end, timestep)
         self.Tset_schedule[:a] = t_set_night
         self.Tset_schedule[b:] = t_set_night
         self.Tset_schedule[a:b] = t_set_day
 
         # constant outside weather
-        
+
         # generate sinus weather
         if schedule_index == 1:
             self.Tout_schedule = self.generate_Tout(
                 t_mid_point=t_mid_point, t_amplitude=t_amplitude, timestep=timestep)
-        
+
         # generate sinus weather add noise
         elif schedule_index == 2:
             self.Tout_schedule = self.generate_Tout(
                 t_mid_point=t_mid_point, t_amplitude=t_amplitude, timestep=timestep)
 
-            self.Tout_schedule  = self.Tout_schedule + np.random.normal(0,2,size=len(self.Tout_schedule))
+            self.Tout_schedule = self.Tout_schedule + \
+                np.random.normal(0, 0.25, size=len(self.Tout_schedule))
         else:
             self.Tout_schedule = np.full(self.max_iterations, 32)
 
@@ -80,6 +81,9 @@ class House():
         #     self.Tout_schedule = np.full(self.max_iterations, 32)
         #     self.occupancy_schedule = np.full(self.max_iterations, 1)
 
+        self.Tset_schedule = np.roll(self.Tset_schedule, -starting_hour_index)
+        self.Tout_schedule = np.roll(self.Tout_schedule, -starting_hour_index)
+
         self.Tset = self.Tset_schedule[0]  # Set Temperature
         self.Tout = self.Tout_schedule[0]  # Outside temperature
 
@@ -98,10 +102,9 @@ class House():
     def generate_Tout(self, t_mid_point: int = 25, t_amplitude: int = 5, timestep: int = 5):
         """Use a sinus function to create a change in temperature
 
-
         """
         weather = [
-            t_amplitude*math.sin((x-6*60)*math.pi/(12*60))+t_mid_point for x in range(0, 24*60)]
+            t_amplitude*math.sin((x-6*60)*math.pi/(12*60))+t_mid_point for x in range(24*60)]
 
         filtered_weather = weather[::timestep]
 
@@ -196,12 +199,15 @@ class House():
 
 if __name__ == '__main__':
     import random
-    house = House(K=0.5, C=0.3, Qhvac=18)
+    house = House(K=0.5, C=0.3, Qhvac=9)
     days = 7
     timestep = 5
     for episode in range(1):
         house.setup_schedule(timestep=timestep,
                              schedule_index=1,
+                             starting_hour=12,
+                             t_set_day=30,
+                             t_set_night=30,
                              )
 
         for i in range(house.max_iterations):

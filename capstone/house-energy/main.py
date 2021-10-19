@@ -54,11 +54,12 @@ class TemplateSimulatorSession:
             "Qhvac": 9,
             "Tin_initial": 30,
             "schedule_index": 3,
-            "number_of_days": 1,
+            "max_iterations": 288,
             "timestep": 5,
             "total_power": 0,
-            "day_start": 7,
-            "day_end": 22,
+            "starting_hour": 0,
+            "tset_day_start": 7,
+            "tset_day_end": 22,
             "t_set_day": 23,
             "t_set_night": 18,
             "t_mid_point": 25,
@@ -119,10 +120,12 @@ class TemplateSimulatorSession:
             Tin_initial=self.sim_config["Tin_initial"],
         )
         self.simulator.setup_schedule(
+            max_iterations=self.sim_config['max_iterations'],
             timestep=self.sim_config["timestep"],
             schedule_index=self.sim_config["schedule_index"],
-            day_start = self.sim_config["day_start"],
-            day_end = self.sim_config["day_end"],
+            starting_hour = self.sim_config["starting_hour"],
+            tset_day_start = self.sim_config["tset_day_start"],
+            tset_day_end = self.sim_config["tset_day_end"],
             t_set_day = self.sim_config["t_set_day"],
             t_set_night = self.sim_config["t_set_night"],
             t_mid_point = self.sim_config["t_mid_point"],
@@ -255,10 +258,12 @@ def test_random_policy(
             "C": 0.3,
             "Qhvac": 9,
             "Tin_initial": random.randint(18, 30),
+            "max_iterations": int(24 * 60 / 5),
             "timestep": 5,
             "schedule_index": 1,
-            "day_start": 7,
-            "day_end": 22,
+            "starting_hour": 0,
+            "tset_day_start": 7,
+            "tset_day_end": 22,
             "t_set_day": 23,
             "t_set_night": 18,
             "t_mid_point": 25,
@@ -407,7 +412,7 @@ if __name__ == "__main__":
 
     if args.test_local:
         test_random_policy(
-            render=args.render, num_episodes=100, log_iterations=args.log_iterations
+            render=args.render, num_episodes=25, log_iterations=args.log_iterations
         )
     else:
         main(config_setup=args.config_setup, render=args.render)
