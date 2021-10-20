@@ -55,7 +55,7 @@ class TemplateSimulatorSession:
             "Tin_initial": 30,
             "custom_t_out": [],
             "schedule_index": 3,
-            "max_iterations": 24 * 60 // 5,
+            "max_iterations": 288, #24 * 60 // 5
             "timestep": 5,
             "total_power": 0,
             "starting_hour": 0,
@@ -122,9 +122,13 @@ class TemplateSimulatorSession:
             Qhvac=self.sim_config["Qhvac"],
             Tin_initial=self.sim_config["Tin_initial"],
         )
+        custom_t_out = []
+        if 'custom_t_out' in self.sim_config.keys():
+            custom_t_out = self.sim_config['custom_t_out'],
+            
         self.simulator.setup_schedule(
             max_iterations=self.sim_config['max_iterations'],
-            custom_t_out = self.sim_config['custom_t_out'],
+            custom_t_out = custom_t_out,
             timestep=self.sim_config["timestep"],
             schedule_index=self.sim_config["schedule_index"],
             starting_hour = self.sim_config["starting_hour"],
@@ -169,7 +173,7 @@ class TemplateSimulatorSession:
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""
-        return self.terminal
+        return False
 
     def random_policy(self, state: Dict = None) -> Dict:
 
@@ -243,7 +247,7 @@ def test_random_policy(
     num_episodes: int = 10,
     render: bool = False,
     log_iterations: bool = False,
-    max_iterations: int = 24 * 60 // 5,
+    max_iterations: int = 288,
 ):
     """Test a policy using random actions over a fixed number of episodes
 

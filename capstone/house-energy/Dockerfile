@@ -15,6 +15,8 @@ WORKDIR /src
 # Copy simulator files to /src
 COPY . /src
 
+RUN pip3 install --upgrade pip
+
 # Install simulator dependencies
 RUN pip3 install -r requirements.txt
 
