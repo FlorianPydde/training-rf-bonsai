@@ -20,7 +20,6 @@ class House():
         self.max_iterations = 0
 
         plt.close()
-        self.fig, self.ax = plt.subplots(1, 1)
 
     def setup_schedule(
         self,
@@ -149,7 +148,8 @@ class House():
         return power
 
     def show(self):
-
+        
+        self.fig, self.ax = plt.subplots(1, 1)
         self.ax.clear()
         self.ax.plot(self.time_to_plot, self.Tin_to_plot, label='Tin')
         self.ax.plot(self.time_to_plot, self.Tset_to_plot, label='Tset')
