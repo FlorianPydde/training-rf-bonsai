@@ -16,15 +16,29 @@ class House():
 
         self.minute = 0
         self.hours = 0
-        self.total_power = 0  # total power consumption
+        self.total_power = 5  # total power consumption
         self.max_iterations = 0
 
         plt.close()
         self.fig, self.ax = plt.subplots(1, 1)
 
-    def setup_schedule(self, custom_t_out: list = [], max_iterations: int = 24 * 60 // 5, timestep: int = 5, schedule_index: int = 0, starting_hour=0, tset_day_start: int = 7, tset_day_end: int = 22, t_set_day:int =23, t_set_night:int =18, t_mid_point:int =25, t_amplitude: int =5):
+    def setup_schedule(
+        self,
+        custom_t_out: list = [], 
+        max_iterations: int = 24 * 60 // 5, 
+        timestep: int = 5, 
+        schedule_index: int = 0, 
+        starting_hour = 0,
+        add_forecast_noise = 0, 
+        tset_day_start: int = 7, 
+        tset_day_end: int = 22, 
+        t_set_day:int = 23, 
+        t_set_night:int = 18, 
+        t_mid_point:int = 25, 
+        t_amplitude: int = 5):
         """ define the Tset_schedule, Tout_schedule, the length of schedule, timestep
         """
+        self.add_forecast_noise = add_forecast_noise
         self.timestep = max(
             1, timestep)  # keep in minutes here to keep number of minutes for days consistent
         starting_hour_index = self.__time_to_index(starting_hour, timestep)
@@ -64,11 +78,19 @@ class House():
         self.Tset = self.Tset_schedule[0]  # Set Temperature
         self.Tout = self.Tout_schedule[0]  # Outside temperature
 
-        self.Tset1 = self.Tset_schedule[1]  + np.random.normal(0, 1)# Set Temperature i+1 and noise
-        self.Tset2 = self.Tset_schedule[2]  + np.random.normal(0, 1) # Set Temperature i+2
-        self.Tset3 = self.Tset_schedule[3]  + np.random.normal(0, 1) # Set Temperature i+3
-        self.Tset4 = self.Tset_schedule[4]  + np.random.normal(0, 1)
-        self.Tset5 = self.Tset_schedule[5]  + np.random.normal(0, 1)
+        self.T_forecast_1 = self.Tout_schedule[1]# Set Temperature i+1 and noise
+        self.T_forecast_2 = self.Tout_schedule[2] # Set Temperature i+2
+        self.T_forecast_3 = self.Tout_schedule[3] # Set Temperature i+3
+        self.T_forecast_4 = self.Tout_schedule[4]
+        self.T_forecast_5 = self.Tout_schedule[5]
+
+        if add_forecast_noise > 0:
+            self.T_forecast_1 +=  np.random.normal(0, 0.1)# Set Temperature i+1 and noise
+            self.T_forecast_2 +=  np.random.normal(0, 0.25) # Set Temperature i+2
+            self.T_forecast_3 +=  np.random.normal(0, 0.5) # Set Temperature i+3
+            self.T_forecast_4 +=  np.random.normal(0, 0.75)
+            self.T_forecast_5 +=  np.random.normal(0, 1)
+      
 
         # For plotting only
         self.time_to_plot = [0]
@@ -155,11 +177,20 @@ class House():
     def __next__(self):
         if self.iteration < self.max_iterations: 
             self.update_Tset(self.Tset_schedule[self.iteration])
-            self.Tset1 = self.Tset_schedule[int((self.iteration+1)%self.max_iterations)] + np.random.normal(0, 0.1)
-            self.Tset2 = self.Tset_schedule[int((self.iteration+2)%self.max_iterations)] + np.random.normal(0, 0.25)
-            self.Tset3 = self.Tset_schedule[int((self.iteration+3)%self.max_iterations)] + np.random.normal(0, 0.5)
-            self.Tset4 = self.Tset_schedule[int((self.iteration+4)%self.max_iterations)] + np.random.normal(0, 0.75)
-            self.Tset5 = self.Tset_schedule[int((self.iteration+5)%self.max_iterations)] + np.random.normal(0, 1)
+
+            self.T_forecast_1 = self.Tout_schedule[int((self.iteration+1)%self.max_iterations)] 
+            self.T_forecast_2 = self.Tout_schedule[int((self.iteration+2)%self.max_iterations)] 
+            self.T_forecast_3 = self.Tout_schedule[int((self.iteration+3)%self.max_iterations)] 
+            self.T_forecast_4 = self.Tout_schedule[int((self.iteration+4)%self.max_iterations)] 
+            self.T_forecast_5 = self.Tout_schedule[int((self.iteration+5)%self.max_iterations)]
+
+            if self.add_forecast_noise > 0:
+                self.T_forecast_1 += np.random.normal(0, 0.1)
+                self.T_forecast_2 += np.random.normal(0, 0.25)
+                self.T_forecast_3 += np.random.normal(0, 0.5)
+                self.T_forecast_4 += np.random.normal(0, 0.75)
+                self.T_forecast_5 += np.random.normal(0, 1)
+
             self.update_Tout(self.Tout_schedule[self.iteration])
             self.update_occupancy(self.occupancy_schedule[self.iteration])
             self.update_time()

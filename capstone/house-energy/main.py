@@ -57,14 +57,15 @@ class TemplateSimulatorSession:
             "schedule_index": 3,
             "max_iterations": 288, #24 * 60 // 5
             "timestep": 5,
-            "total_power": 0,
+            "total_power": 10,
             "starting_hour": 0,
             "tset_day_start": 7,
             "tset_day_end": 22,
             "t_set_day": 23,
             "t_set_night": 18,
             "t_mid_point": 25,
-            "t_amplitude": 5
+            "t_amplitude": 5,
+            "add_forecast_noise": 1
             
         }
         self._reset()
@@ -89,11 +90,11 @@ class TemplateSimulatorSession:
 
         sim_state = {
             "Tset": float(self.simulator.Tset),
-            "Tset1": float(self.simulator.Tset1),  # forecast at +1 iteration
-            "Tset2": float(self.simulator.Tset2),  # forecast at +2 iterations
-            "Tset3": float(self.simulator.Tset3),  # forecast at +3 iterations
-            "Tset4": float(self.simulator.Tset4),  # forecast at +3 iterations
-            "Tset5": float(self.simulator.Tset5),  # forecast at +3 iterations
+            "T_forecast_1": float(self.simulator.T_forecast_1),  # forecast at +1 iteration
+            "T_forecast_2": float(self.simulator.T_forecast_2),  # forecast at +2 iterations
+            "T_forecast_3": float(self.simulator.T_forecast_3),  # forecast at +3 iterations
+            "T_forecast_4": float(self.simulator.T_forecast_4),  # forecast at +3 iterations
+            "T_forecast_5": float(self.simulator.T_forecast_5),  # forecast at +3 iterations
             "Tin": float(self.simulator.Tin),
             "Tout": float(self.simulator.Tout),
             "power": float(self.simulator.get_Power()),
@@ -125,7 +126,11 @@ class TemplateSimulatorSession:
         custom_t_out = []
         if 'custom_t_out' in self.sim_config.keys():
             custom_t_out = self.sim_config['custom_t_out'],
-            
+
+        add_forecast_noise = 1
+        if "add_forecast_noise" in self.sim_config.keys():
+            add_forecast_noise = self.sim_config['add_forecast_noise']
+
         self.simulator.setup_schedule(
             max_iterations=self.sim_config['max_iterations'],
             custom_t_out = custom_t_out,
@@ -137,7 +142,8 @@ class TemplateSimulatorSession:
             t_set_day = self.sim_config["t_set_day"],
             t_set_night = self.sim_config["t_set_night"],
             t_mid_point = self.sim_config["t_mid_point"],
-            t_amplitude = self.sim_config["t_amplitude"]
+            t_amplitude = self.sim_config["t_amplitude"],
+            add_forecast_noise = add_forecast_noise
         )
 
     def episode_start(self, config: Dict[str, Any] = None):
@@ -276,7 +282,8 @@ def test_random_policy(
             "t_set_day": 23,
             "t_set_night": 18,
             "t_mid_point": 25,
-            "t_amplitude": 5
+            "t_amplitude": 5,
+            "add_forecast_noise": 1
         }
         sim.episode_start(config=config)
         sim_state = sim.get_state()
